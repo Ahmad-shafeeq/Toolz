@@ -125,25 +125,47 @@
             padding: 3rem 1rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             margin-bottom: 2rem;
             position: relative;
         }
         
-        .upload-area:hover {
+        .upload-area.drag-over {
             border-color: var(--primary-color);
-            background-color: rgba(66, 133, 244, 0.05);
+            background-color: rgba(66, 133, 244, 0.1);
+            transform: scale(1.02);
         }
         
-        .upload-area.active {
-            border-color: var(--secondary-color);
-            background-color: rgba(52, 168, 83, 0.05);
+        .upload-area:hover:not(.drag-over) {
+            border-color: var(--primary-color);
+            background-color: rgba(66, 133, 244, 0.05);
         }
         
         .upload-icon {
             font-size: 3rem;
             color: var(--primary-color);
             margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .drag-over .upload-icon {
+            transform: scale(1.2);
+            color: var(--primary-color);
+        }
+        
+        .image-preview {
+            display: none;
+            max-width: 100%;
+            max-height: 200px;
+            margin: 20px auto;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
         }
         
         .controls {
@@ -509,10 +531,11 @@
         
         <div class="compressor-container">
             <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
+                <div class="upload-icon" id="uploadIcon">📁</div>
                 <h2>Drag & Drop Your Images Here</h2>
                 <p>or click to browse files</p>
                 <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                <div class="image-preview" id="imagePreview"></div>
             </div>
             
             <div class="controls">
@@ -705,7 +728,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // DOM elements
             const uploadArea = document.getElementById('uploadArea');
+            const uploadIcon = document.getElementById('uploadIcon');
             const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
             const compressBtn = document.getElementById('compressBtn');
             const downloadBtn = document.getElementById('downloadBtn');
             const compressionSlider = document.getElementById('compressionSlider');
@@ -721,16 +746,19 @@
             
             // Event listeners
             uploadArea.addEventListener('click', () => fileInput.click());
+            
             uploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                uploadArea.classList.add('active');
+                uploadArea.classList.add('drag-over');
             });
+            
             uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('active');
+                uploadArea.classList.remove('drag-over');
             });
+            
             uploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
-                uploadArea.classList.remove('active');
+                uploadArea.classList.remove('drag-over');
                 if (e.dataTransfer.files.length) {
                     handleFileSelect(e.dataTransfer.files[0]);
                 }
@@ -767,7 +795,14 @@
                         url: e.target.result
                     };
                     
-                    // Display original image
+                    // Show preview immediately
+                    imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                    imagePreview.style.display = 'block';
+                    
+                    // Hide the upload icon
+                    uploadIcon.style.display = 'none';
+                    
+                    // Display original image in results
                     const originalImage = document.getElementById('originalImage');
                     originalImage.src = e.target.result;
                     
